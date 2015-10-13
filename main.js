@@ -178,20 +178,100 @@ function constraints(filePath)
 					{
 						// get expression from original source code:
 						var expression = buf.substring(child.range[0], child.range[1]);
-						var rightHand = buf.substring(child.right.range[0], child.right.range[1])
-
+						var rightHand = buf.substring(child.right.range[0], child.right.range[1]);
+						
 						functionConstraints[funcName].constraints.push( 
-							new Constraint(
-							{
-								ident: child.left.name,
-								value: rightHand,
-								funcName: funcName,
-								kind: "integer",
-								operator : child.operator,
-								expression: expression
-							}));
+						new Constraint(
+						{
+							ident: child.left.name,
+							value: rightHand,
+							funcName: funcName,
+							kind: "integer",
+							operator : child.operator,
+							expression: expression
+						}));		
+						
 					}
 				}
+
+				//MY CODE---------------------------------------------------------------------
+				if( child.type === 'BinaryExpression' && (child.operator == "<" || child.operator == "<="))
+				{
+					if( child.left.type == 'Identifier' && params.indexOf( child.left.name ) > -1)
+					{
+						// get expression from original source code:
+						var expression = buf.substring(child.range[0], child.range[1]);
+						var rightHand = buf.substring(child.right.range[0], child.right.range[1]);
+
+						var intRight = parseInt(rightHand);
+						var test1 = intRight - 2;
+						var test2 = intRight + 2;
+						
+						functionConstraints[funcName].constraints.push( 
+						new Constraint(
+						{
+							ident: child.left.name,
+							value: test1,
+							funcName: funcName,
+							kind: "integer",
+							operator : child.operator,
+							expression: expression
+						}));
+
+						functionConstraints[funcName].constraints.push( 
+						new Constraint(
+						{
+							ident: child.left.name,
+							value: test2,
+							funcName: funcName,
+							kind: "integer",
+							operator : child.operator,
+							expression: expression
+						}));		
+						
+					}
+				}
+
+
+				if( child.type === 'BinaryExpression' && (child.operator == ">" || child.operator == ">="))
+				{
+					if( child.left.type == 'Identifier' && params.indexOf( child.left.name ) > -1)
+					{
+						// get expression from original source code:
+						var expression = buf.substring(child.range[0], child.range[1]);
+						var rightHand = buf.substring(child.right.range[0], child.right.range[1]);
+
+						var intRight = parseInt(rightHand);
+						var test1 = intRight - 2;
+						var test2 = intRight + 2;
+						
+						functionConstraints[funcName].constraints.push( 
+						new Constraint(
+						{
+							ident: child.left.name,
+							value: test1,
+							funcName: funcName,
+							kind: "integer",
+							operator : child.operator,
+							expression: expression
+						}));
+
+						functionConstraints[funcName].constraints.push( 
+						new Constraint(
+						{
+							ident: child.left.name,
+							value: test2,
+							funcName: funcName,
+							kind: "integer",
+							operator : child.operator,
+							expression: expression
+						}));		
+						
+					}
+				}
+
+
+				//CODE ENDS-------------------------------------------------------------------
 
 				if( child.type == "CallExpression" && 
 					 child.callee.property &&
