@@ -103,23 +103,39 @@ function generateTestCases()
 			{
 				params[constraint.ident] = constraint.value;
 			}
+
+			// Prepare function arguments.
+			var args = Object.keys(params).map( function(k) {return params[k]; }).join(",");
+			if( pathExists || fileWithContent )
+			{
+				content += generateMockFsTestCases(pathExists,fileWithContent,funcName, args);
+				// Bonus...generate constraint variations test cases....
+				content += generateMockFsTestCases(!pathExists,fileWithContent,funcName, args);
+				content += generateMockFsTestCases(pathExists,!fileWithContent,funcName, args);
+				content += generateMockFsTestCases(!pathExists,!fileWithContent,funcName, args);
+			}
+			else
+			{
+				// Emit simple test case.
+				content += "subject.{0}({1});\n".format(funcName, args );
+			}
 		}
 
-		// Prepare function arguments.
-		var args = Object.keys(params).map( function(k) {return params[k]; }).join(",");
-		if( pathExists || fileWithContent )
-		{
-			content += generateMockFsTestCases(pathExists,fileWithContent,funcName, args);
-			// Bonus...generate constraint variations test cases....
-			content += generateMockFsTestCases(!pathExists,fileWithContent,funcName, args);
-			content += generateMockFsTestCases(pathExists,!fileWithContent,funcName, args);
-			content += generateMockFsTestCases(!pathExists,!fileWithContent,funcName, args);
-		}
-		else
-		{
-			// Emit simple test case.
-			content += "subject.{0}({1});\n".format(funcName, args );
-		}
+		// // Prepare function arguments.
+		// var args = Object.keys(params).map( function(k) {return params[k]; }).join(",");
+		// if( pathExists || fileWithContent )
+		// {
+		// 	content += generateMockFsTestCases(pathExists,fileWithContent,funcName, args);
+		// 	// Bonus...generate constraint variations test cases....
+		// 	content += generateMockFsTestCases(!pathExists,fileWithContent,funcName, args);
+		// 	content += generateMockFsTestCases(pathExists,!fileWithContent,funcName, args);
+		// 	content += generateMockFsTestCases(!pathExists,!fileWithContent,funcName, args);
+		// }
+		// else
+		// {
+		// 	// Emit simple test case.
+		// 	content += "subject.{0}({1});\n".format(funcName, args );
+		// }
 
 	}
 
@@ -179,17 +195,91 @@ function constraints(filePath)
 						// get expression from original source code:
 						var expression = buf.substring(child.range[0], child.range[1]);
 						var rightHand = buf.substring(child.right.range[0], child.right.range[1]);
+
+						if(rightHand == undefined){
+
+							var counterRight = 1;
+
+							functionConstraints[funcName].constraints.push( 
+							new Constraint(
+							{
+								ident: child.left.name,
+								value: rightHand,
+								funcName: funcName,
+								kind: "integer",
+								operator : child.operator,
+								expression: expression
+							}));
+
+							functionConstraints[funcName].constraints.push( 
+							new Constraint(
+							{
+								ident: child.left.name,
+								value: counterRight,
+								funcName: funcName,
+								kind: "integer",
+								operator : child.operator,
+								expression: expression
+							}));	
+						}
+						else{
+							if(rightHand.charCodeAt(1) == 45 && rightHand.charCodeAt(2)<=57 && rightHand.charCodeAt(2)>=48){
+								
+								var test1 = parseInt(rightHand);
+								var test2 = test1 + 1;
+								
+								functionConstraints[funcName].constraints.push( 
+								new Constraint(
+								{
+									ident: child.left.name,
+									value: test1,
+									funcName: funcName,
+									kind: "integer",
+									operator : child.operator,
+									expression: expression
+								}));
+
+								functionConstraints[funcName].constraints.push( 
+								new Constraint(
+								{
+									ident: child.left.name,
+									value: test2,
+									funcName: funcName,
+									kind: "integer",
+									operator : child.operator,
+									expression: expression
+								}));	
+							}
+							else if(rightHand.charCodeAt(2)<=57 && rightHand.charCodeAt(2)>=48){
+								var test1 = parseInt(rightHand);
+								var test2 = test1 + 1;
+								
+								functionConstraints[funcName].constraints.push( 
+								new Constraint(
+								{
+									ident: child.left.name,
+									value: test1,
+									funcName: funcName,
+									kind: "integer",
+									operator : child.operator,
+									expression: expression
+								}));
+
+								functionConstraints[funcName].constraints.push( 
+								new Constraint(
+								{
+									ident: child.left.name,
+									value: test2,
+									funcName: funcName,
+									kind: "integer",
+									operator : child.operator,
+									expression: expression
+								}));
+							}
+						}
+
 						
-						functionConstraints[funcName].constraints.push( 
-						new Constraint(
-						{
-							ident: child.left.name,
-							value: rightHand,
-							funcName: funcName,
-							kind: "integer",
-							operator : child.operator,
-							expression: expression
-						}));		
+								
 						
 					}
 				}
