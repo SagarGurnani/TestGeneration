@@ -7,6 +7,8 @@ var mock = require('mock-fs');
 var _ = require('underscore');
 var Random = require('random-js');
 
+var comboArray = [];
+
 function main()
 {
 	var args = process.argv.slice(2);
@@ -106,6 +108,15 @@ function generateTestCases()
 
 			// Prepare function arguments.
 			var args = Object.keys(params).map( function(k) {return params[k]; }).join(",");
+
+			var extraArgs;
+			for(var i = 0;i<comboArray.length;i++){
+				for(var j=0; j<comboArray.length;j++){
+					extraArgs = comboArray[i]+','+comboArray[j];
+					content += "subject.{0}({1});\n".format(funcName, extraArgs );
+				}
+			}
+
 			if( pathExists || fileWithContent )
 			{
 				content += generateMockFsTestCases(pathExists,fileWithContent,funcName, args);
@@ -210,6 +221,7 @@ function constraints(filePath)
 								operator : child.operator,
 								expression: expression
 							}));
+							comboArray.push(rightHand);
 
 							functionConstraints[funcName].constraints.push( 
 							new Constraint(
@@ -220,7 +232,8 @@ function constraints(filePath)
 								kind: "integer",
 								operator : child.operator,
 								expression: expression
-							}));	
+							}));
+							comboArray.push(counterRight);	
 						}
 						else{
 							if(rightHand.charCodeAt(1) == 45 && rightHand.charCodeAt(2)<=57 && rightHand.charCodeAt(2)>=48){
@@ -238,6 +251,7 @@ function constraints(filePath)
 									operator : child.operator,
 									expression: expression
 								}));
+								comboArray.push(test1);
 
 								functionConstraints[funcName].constraints.push( 
 								new Constraint(
@@ -249,6 +263,7 @@ function constraints(filePath)
 									operator : child.operator,
 									expression: expression
 								}));	
+								comboArray.push(test2);
 							}
 							else if(rightHand.charCodeAt(2)<=57 && rightHand.charCodeAt(2)>=48){
 								var test1 = parseInt(rightHand);
@@ -264,6 +279,7 @@ function constraints(filePath)
 									operator : child.operator,
 									expression: expression
 								}));
+								comboArray.push(test1);
 
 								functionConstraints[funcName].constraints.push( 
 								new Constraint(
@@ -275,6 +291,7 @@ function constraints(filePath)
 									operator : child.operator,
 									expression: expression
 								}));
+								comboArray.push(test2);
 							}
 							else{
 								var test1 = rightHand;
@@ -291,6 +308,7 @@ function constraints(filePath)
 									operator : child.operator,
 									expression: expression
 								}));
+								comboArray.push(test1);
 
 								functionConstraints[funcName].constraints.push( 
 								new Constraint(
@@ -302,6 +320,7 @@ function constraints(filePath)
 									operator : child.operator,
 									expression: expression
 								}));
+								comboArray.push(test2);
 							}
 						}
 					}
@@ -330,6 +349,7 @@ function constraints(filePath)
 							operator : child.operator,
 							expression: expression
 						}));
+						comboArray.push(test1);
 
 						functionConstraints[funcName].constraints.push( 
 						new Constraint(
@@ -340,7 +360,8 @@ function constraints(filePath)
 							kind: "integer",
 							operator : child.operator,
 							expression: expression
-						}));		
+						}));
+						comboArray.push(test2);		
 						
 					}
 				}
@@ -368,6 +389,7 @@ function constraints(filePath)
 							operator : child.operator,
 							expression: expression
 						}));
+						comboArray.push(test1);
 
 						functionConstraints[funcName].constraints.push( 
 						new Constraint(
@@ -378,7 +400,8 @@ function constraints(filePath)
 							kind: "integer",
 							operator : child.operator,
 							expression: expression
-						}));		
+						}));
+						comboArray.push(test2);		
 						
 					}
 				}
