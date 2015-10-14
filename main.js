@@ -2,12 +2,13 @@ var esprima = require("esprima");
 var options = {tokens:true, tolerant: true, loc: true, range: true };
 var faker = require("faker");
 var fs = require("fs");
-faker.locale = "en";
+faker.locale = "en_US";
 var mock = require('mock-fs');
 var _ = require('underscore');
 var Random = require('random-js');
 
 var comboArray = [];
+var fileString = '';
 
 function main()
 {
@@ -49,9 +50,9 @@ function Constraint(properties)
 
 function fakeDemo()
 {
-	console.log( faker.phone.phoneNumber() );
-	console.log( faker.phone.phoneNumberFormat() );
-	console.log( faker.phone.phoneFormats() );
+	//console.log( faker.phone.phoneNumber() );
+	return faker.phone.phoneNumberFormat();
+	//console.log( faker.phone.phoneFormats() );
 }
 
 var functionConstraints =
@@ -62,13 +63,20 @@ var mockFileLibrary =
 {
 	pathExists:
 	{
-		'path/fileExists': {}
+		'path/fileExists': {},
+		'path/fileExists1' : {
+			newContent: 
+			{	
+  				file2: 'text content',
+			}
+		}
 	},
 	fileWithContent:
 	{
 		pathContent: 
 		{	
   			file1: 'text content',
+  			file2: ''
 		}
 	}
 };
@@ -91,12 +99,16 @@ function generateTestCases()
 
 		//console.log( params );
 
+
 		// update parameter values based on known constraints.
 		var constraints = functionConstraints[funcName].constraints;
 		// Handle global constraints...
 		var fileWithContent = _.some(constraints, {kind: 'fileWithContent' });
 		var pathExists      = _.some(constraints, {kind: 'fileExists' });
 
+		if(funcName == 'fileTest'){
+			console.log("constraints=",JSON.stringify(constraints,null,3));
+		}
 		// plug-in values for parameters
 		for( var c = 0; c < constraints.length; c++ )
 		{
@@ -104,18 +116,56 @@ function generateTestCases()
 			if( params.hasOwnProperty( constraint.ident ) )
 			{
 				params[constraint.ident] = constraint.value;
+				// if(constraint.ident == 'filePath'){
+				// 	console.log("constraint.value=====================",constraint.value);
+				// 	if(constraint.value == '\'\''){
+				// 		console.log('INSIDE SECRET AREA');
+				// 		params[constraint.ident] = '\'demopath\'';
+				// 	}
+				// 	else{
+				// 		params[constraint.ident] = constraint.value;
+				// 	}
+				// }
+				// else{
+				// 	params[constraint.ident] = constraint.value;	
+				// }
+				
+
+				// if(constraint.kind == 'fileWithContent' || constraint.kind == 'fileExists'){
+				// 	if(params[constraint.ident] == '\'\''){
+				// 		params[constraint.ident] = '\'demopath\'';
+				// 	}
+				// }
 			}
+
+			if(params[fileString] == '\'\''){
+				params[fileString] = '\'demopath\'';
+			}
+
 
 			// Prepare function arguments.
 			var args = Object.keys(params).map( function(k) {return params[k]; }).join(",");
 
-			var extraArgs;
-			for(var i = 0;i<comboArray.length;i++){
-				for(var j=0; j<comboArray.length;j++){
-					extraArgs = comboArray[i]+','+comboArray[j];
-					content += "subject.{0}({1});\n".format(funcName, extraArgs );
-				}
-			}
+			// var paramLength = functionConstraints[funcName].params.length;
+			// var innerArray = [];
+			// var answer = [];
+
+			// for(var comboFiller=0;comboFiller<comboArray.length;comboFiller++){
+			// 	innerArray.push(comboFiller);
+			// }
+
+			// var indexPtr=[];
+			// for(var indexFiller=0;indexFiller<paramLength;indexFiller++){
+			// 	answer[indexFiller] = innerArray;
+			// 	indexPtr[indexFiller] = 0;
+			// }
+
+
+			// for(var iterator=answer.length;iterator>0;iterator--){
+
+			// }
+
+
 
 			if( pathExists || fileWithContent )
 			{
@@ -190,17 +240,66 @@ function constraints(filePath)
 		if (node.type === 'FunctionDeclaration') 
 		{
 			var funcName = functionName(node);
+
 			console.log("Line : {0} Function: {1}".format(node.loc.start.line, funcName ));
 
 			var params = node.params.map(function(p) {return p.name});
 
 			functionConstraints[funcName] = {constraints:[], params: params};
 
+			for(var paramIndex = 0;paramIndex<params.length;paramIndex++){
+				if(params[paramIndex] == 'phoneNumber'){
+					var myNumber = '\''+fakeDemo()+'\'';
+
+					functionConstraints[funcName].constraints.push( 
+							new Constraint(
+							{
+								ident: 'phoneNumber',
+								value: myNumber,
+								funcName: funcName,
+								kind: "string",
+								operator : node.operator,
+								expression: '\'\''
+							}));
+					functionConstraints[funcName].constraints.push( 
+							new Constraint(
+							{
+								ident: 'phoneNumber',
+								value: '\'\'',
+								funcName: funcName,
+								kind: "string",
+								operator : node.operator,
+								expression: '\'\''
+							}));
+
+				}
+			}
+
 			// Check for expressions using argument.
 			traverse(node, function(child)
 			{
 				if( child.type === 'BinaryExpression' && child.operator == "==")
 				{
+					if(child.left.name == 'area'){
+						//console.log("coming in AREAAAAAAAAAAAAAAAAAAAAA");
+						var NYnumber = '\''+fakeDemo()+'\'';
+						var newArea = child.right.value;
+						NYnumber = '\''+newArea+NYnumber.substring(4,NYnumber.length);
+
+						//console.log("new no===================",NYnumber);
+						functionConstraints[funcName].constraints.push( 
+							new Constraint(
+							{
+								ident: 'phoneNumber',
+								value: NYnumber,
+								funcName: funcName,
+								kind: "integer",
+								operator : child.operator,
+								expression: expression
+							}));
+
+
+					}
 					if( child.left.type == 'Identifier' && params.indexOf( child.left.name ) > -1)
 					{
 						// get expression from original source code:
@@ -236,7 +335,7 @@ function constraints(filePath)
 							comboArray.push(counterRight);	
 						}
 						else{
-							if(rightHand.charCodeAt(1) == 45 && rightHand.charCodeAt(2)<=57 && rightHand.charCodeAt(2)>=48){
+							if(rightHand.charCodeAt(0) == 45 && rightHand.charCodeAt(1)<=57 && rightHand.charCodeAt(1)>=48){
 								
 								var test1 = parseInt(rightHand);
 								var test2 = test1 + 1;
@@ -265,7 +364,7 @@ function constraints(filePath)
 								}));	
 								comboArray.push(test2);
 							}
-							else if(rightHand.charCodeAt(2)<=57 && rightHand.charCodeAt(2)>=48){
+							else if(rightHand.charCodeAt(0)<=57 && rightHand.charCodeAt(0)>=48){
 								var test1 = parseInt(rightHand);
 								var test2 = test1 + 1;
 								
@@ -430,6 +529,7 @@ function constraints(filePath)
 					{
 						if( child.arguments[0].name == params[p] )
 						{
+							fileString = params[p];
 							functionConstraints[funcName].constraints.push( 
 							new Constraint(
 							{
@@ -450,7 +550,7 @@ function constraints(filePath)
 				{
 					for( var p =0; p < params.length; p++ )
 					{
-						if( child.arguments[0].name == params[p] )
+						if( child.arguments[0].name == params[p] && child.arguments[0].name == 'dir' )
 						{
 							functionConstraints[funcName].constraints.push( 
 							new Constraint(
@@ -463,7 +563,43 @@ function constraints(filePath)
 								operator : child.operator,
 								expression: expression
 							}));
+
+							functionConstraints[funcName].constraints.push( 
+							new Constraint(
+							{
+								ident: params[p],
+								// A fake path to a file
+								value:  "'path/fileExists1'",
+								funcName: funcName,
+								kind: "fileExists",
+								operator : child.operator,
+								expression: expression
+							}));
 						}
+						if( child.arguments[0].name == params[p] && child.arguments[0].name == 'filePath' ){
+							functionConstraints[funcName].constraints.push( 
+							new Constraint(
+							{
+								ident: params[p],
+								value:  "'pathContent/file1'",
+								funcName: funcName,
+								kind: "fileWithContent",
+								operator : child.operator,
+								expression: expression
+							}));
+
+							functionConstraints[funcName].constraints.push( 
+							new Constraint(
+							{
+								ident: params[p],
+								value:  "'pathContent/file2'",
+								funcName: funcName,
+								kind: "fileWithContent",
+								operator : child.operator,
+								expression: expression
+							}));
+						}
+
 					}
 				}
 
