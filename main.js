@@ -518,6 +518,58 @@ function constraints(filePath)
 					}
 				}
 
+				if(child.type === 'UnaryExpression' && child.operator == '!'){
+
+					var optionName='';
+					var propertyName='';
+					if(child.hasOwnProperty('argument')){
+						if(child.argument.hasOwnProperty('object')){
+							if(child.argument.object.hasOwnProperty('name')){
+								optionName = child.argument.object.name;		
+							}
+						}
+						
+						if(child.argument.hasOwnProperty('property')){
+							if(child.argument.property.hasOwnProperty('name')){
+								propertyName = child.argument.property.name;	
+							}
+							
+						}
+					}
+					//console.log(optionName+"   "+propertyName);
+					var positiveObj = {};
+					positiveObj[propertyName] = true;
+					positiveObj = JSON.stringify(positiveObj);
+
+					var negativeObj = {};
+					negativeObj[propertyName] = false;
+					negativeObj = JSON.stringify(negativeObj);
+
+					functionConstraints[funcName].constraints.push( 
+						new Constraint(
+						{
+							ident: optionName,
+							value: positiveObj,
+							funcName: funcName,
+							kind: "string",
+							operator : child.operator,
+							expression: expression
+						}));
+
+					functionConstraints[funcName].constraints.push( 
+						new Constraint(
+						{
+							ident: optionName,
+							value: negativeObj,
+							funcName: funcName,
+							kind: "string",
+							operator : child.operator,
+							expression: expression
+						}));
+
+
+				}
+
 
 				//CODE ENDS-------------------------------------------------------------------
 
